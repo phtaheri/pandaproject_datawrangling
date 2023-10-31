@@ -1,0 +1,343 @@
+library(reshape2)
+library(dplyr)
+library(tidyverse)
+library(reshape2)
+library(ggplot2)
+library(psych)
+library(moments)
+library(DescTools)
+library(car)
+library(PerformanceAnalytics)
+library(MASS)
+
+#now i'm going to look at all the demos. 
+
+
+setwd("/Users/parsanajmaie/Desktop/PhD/Masters Thesis")
+
+#upload csv: 
+
+PBS_demos <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/PBS_neighbor_INRFSS_demos_7.6.csv')
+
+#let's check variables:
+
+#Child age years:
+hist(PBS_demos$child_age) #mostly 4 yos
+summary(PBS_demos$child_age) #avg age is 4.724 median is 5.0
+skewness(PBS_demos$child_age, na.rm = TRUE) #.79 skew 
+
+#child race: 
+hist(PBS_demos$child_race_cat) #mostly race 1 or 2, with substantial 5, so variability exists. 
+summary(PBS_demos$child_race_cat) #median = race 2
+
+#child hispanic:
+hist(PBS_demos$child_hispanic) #1 is hispanic. mostly non hispanic but about 50 hispanic. 
+Freq(PBS_demos$child_hispanic) # 67 non hispanic #52 hispanic 
+
+#child sex:
+hist(PBS_demos$child_sex) #mostly male
+Freq(PBS_demos$child_sex) #64 male 58 f
+
+#caregiver education
+hist(PBS_demos$care_ed_cat)
+Freq(PBS_demos$care_ed_cat) #most at level 5-7 education 
+
+#Family resources scale: 
+
+#growth and support: #usable
+hist(PBS_demos$FRS_GS_Scaled) #pretty normal 
+summary(PBS_demos$FRS_GS_Scaled) #38 NAs though.... 
+skewness(PBS_demos$FRS_GS_Scaled, na.rm = TRUE)
+
+#intrafamily support: 
+hist(PBS_demos$FRS_IFS_Scaled) #too skewed, no. 
+summary(PBS_demos$FRS_IFS_Scaled) 
+skewness(PBS_demos$FRS_IFS_Scaled)
+
+####***USABLE####FRS total: 
+hist(PBS_demos$FRS_Totals) #skewed higher resources, potentially usable
+summary(PBS_demos$FRS_Totals) #38 NAs. 
+skewness(PBS_demos$FRS_Totals, na.rm = TRUE) #-.67 skew
+#let's winsorize. usable. 
+PBS_demos$FRS_Totals_w <- Winsorize(PBS_demos$FRS_Totals, na.rm = TRUE)
+hist(PBS_demos$FRS_Totals_w)
+skewness(PBS_demos$FRS_Totals_w, na.rm = TRUE)
+
+##this is for copying and pasting below:
+
+hist(PBS_demos$FRS_GS_Scaled) 
+summary(PBS_demos$FRS_GS_Scaled) 
+skewness(PBS_demos$FRS_GS_Scaled, na.rm = TRUE)
+
+###****USABLE#####ladder local: 
+hist(PBS_demos$ladder_local) #really normal looking
+summary(PBS_demos$ladder_local) #30 nas. 
+skewness(PBS_demos$ladder_local, na.rm = TRUE) #pretty much no skew; 
+
+####***ALSO USABLE######ladder US: 
+hist(PBS_demos$ladder_us) #skewed lower. very interesting. 
+summary(PBS_demos$ladder_us) #mean= 5, median = 3
+skewness(PBS_demos$ladder_us, na.rm = TRUE) #.27 skew
+
+#TESI sum: 
+hist(PBS_demos$TESI_sum) #low trauma
+Freq(PBS_demos$TESI_sum) #55% 0,1 trauma 
+summary(PBS_demos$TESI_sum) #32 nas. idk. mostly not usable i think.
+
+####***USABLE####FSI total:
+hist(PBS_demos$FSI_total) #low family stressors 
+Freq(PBS_demos$FSI_total) #mostly 2-4 stressors
+summary(PBS_demos$FSI_total) #27 NAs
+#LET'S try to winsorize: 
+PBS_demos$FSI_total_w <- Winsorize(PBS_demos$FSI_total, na.rm = TRUE)
+hist(PBS_demos$FSI_total_w)
+skewness(PBS_demos$FSI_total_w) #POSITIVE SKEW. 
+PBS_demos$FSI_total_wsqrt <- sqrt(PBS_demos$FSI_total_w)
+hist(PBS_demos$FSI_total_wsqrt)
+skewness(PBS_demos$FSI_total_wsqrt)
+
+#ANXIETY: 
+
+###***usable but what this mean???STAI: 
+hist(PBS_demos$STAI) #
+summary(PBS_demos$STAI) #mean 86
+PBS_demos$STAI_w <- Winsorize(PBS_demos$STAI, na.rm = TRUE)
+hist(PBS_demos$STAI_w)
+##goooood
+
+###**usable####STAI-s: 
+hist(PBS_demos$STAI_S)
+summary(PBS_demos$STAI_S) #24 nas
+skewness(PBS_demos$STAI_S) #pretty negatively skewed 
+PBS_demos$STAI_S_w <- Winsorize(PBS_demos$STAI_S, na.rm = TRUE)
+hist(PBS_demos$STAI_S_w) 
+#goood
+
+#DEpression, BDI total: #wsqrt
+hist(PBS_demos$BDI_total) #mostly low depression. 
+summary(PBS_demos$BDI_total) #average is a score of 10.85. max is 43. 
+boxplot(PBS_demos$BDI_total)
+PBS_demos$BDI_total_w <- Winsorize(PBS_demos$BDI_total, na.rm = TRUE)
+boxplot(PBS_demos$BDI_total_w)
+hist(PBS_demos$BDI_total_w)
+skewness(PBS_demos$BDI_total_w) #positive
+PBS_demos$BDI_total_w_sqrt <- sqrt(PBS_demos$BDI_total_w)
+hist(PBS_demos$BDI_total_w_sqrt)
+
+
+#FSS:***usable***
+
+hist(PBS_demos$FSStotal)
+skewness(PBS_demos$FSStotal) #1.0 positive skew.
+PBS_demos$FSStotal_w <- Winsorize(PBS_demos$FSStotal, na.rm = TRUE)
+hist(PBS_demos$FSStotal_w)
+skewness(PBS_demos$FSStotal_w) #this is good now. 
+
+#ADI: #winsorized.
+PBS_demos$ADI_Nat_Percentile <- as.numeric(PBS_demos$ADI_Nat_Percentile, na.rm = TRUE)
+hist(PBS_demos$ADI_Nat_Percentile) #skewed higher deprivation, of course. 
+boxplot(PBS_demos$ADI_Nat_Percentile)
+skewness(PBS_demos$ADI_Nat_Percentile) #-.53
+PBS_demos$ADI_Nat_Percentile_w <- Winsorize(PBS_demos$ADI_Nat_Percentile, na.rm = TRUE)
+hist(PBS_demos$ADI_Nat_Percentile_w) 
+boxplot(PBS_demos$ADI_Nat_Percentile_w)
+skewness(PBS_demos$ADI_Nat_Percentile_w)
+
+
+#ADI STATE: #OG, INTERESTING.
+hist(PBS_demos$ADI_State_Decile) #neg skew
+describe(PBS_demos$ADI_State_Decile) #actually not bad. wow. 
+
+
+#NATIONALCOI: ##sqrt.
+hist(PBS_demos$r_COI_nat) #mostly lower opportunity, as expected
+skewness(PBS_demos$r_COI_nat) #positive skew
+PBS_demos$r_COI_nat_sqrt <- sqrt(PBS_demos$r_COI_nat)
+skewness(PBS_demos$r_COI_nat_sqrt) #.29 good. 
+hist(PBS_demos$r_COI_nat_sqrt) 
+
+
+#NATIONALCOI EDU: #sqrt makes it perfect. 
+hist(PBS_demos$r_ED_nat) #INTERESTING. THIS IS MORE NORMAL.  
+skewness(PBS_demos$r_ED_nat) #slight positive skew. 
+PBS_demos$r_ED_nat_sqrt <- sqrt(PBS_demos$r_ED_nat)
+hist(PBS_demos$r_ED_nat_sqrt)
+
+#NATIONALCOI socialecon: #sqrt
+hist(PBS_demos$r_SE_nat) #big pos skew 
+describe(PBS_demos$r_SE_nat)
+PBS_demos$r_SE_nat_sqrt <- sqrt(PBS_demos$r_SE_nat)
+hist(PBS_demos$r_SE_nat_sqrt)
+describe(PBS_demos$r_SE_nat_sqrt)
+
+#NATIONALCOI health: #log 
+hist(PBS_demos$r_HE_nat) #huge pos skew
+describe(PBS_demos$r_HE_nat)
+PBS_demos$r_HE_nat_log <- log10(PBS_demos$r_HE_nat)
+hist(PBS_demos$r_HE_nat_log)
+describe(PBS_demos$r_HE_nat_log) #good!!!
+
+#STATECOI: #winsorized. 
+hist(PBS_demos$r_COI_stt) 
+describe(PBS_demos$r_COI_stt)
+PBS_demos$r_COI_stt_w <- Winsorize(PBS_demos$r_COI_stt, na.rm = TRUE)
+hist(PBS_demos$r_COI_stt_w)
+describe(PBS_demos$r_COI_stt_w)
+
+#STATECOI EDU; #OG
+hist(PBS_demos$r_ED_stt) 
+describe(PBS_demos$r_ED_stt)
+
+#STATECOI HEALTH; GOOD.SQRT.
+hist(PBS_demos$r_HE_stt) #really bad pos skew
+PBS_demos$r_HE_stt_sqrt <- sqrt(PBS_demos$r_HE_stt)
+hist(PBS_demos$r_HE_stt_sqrt)
+describe(PBS_demos$r_HE_stt_sqrt)
+
+#STATECOI SOCIALECON: SQRT
+hist(PBS_demos$r_SE_stt) #yuuuuge positive skew 
+boxplot(PBS_demos$r_SE_stt)
+PBS_demos$r_SE_stt_sqrt <- sqrt(PBS_demos$r_SE_stt)
+hist(PBS_demos$r_SE_stt_sqrt)
+describe(PBS_demos$r_SE_stt_sqrt)
+
+#conflict tactics questionare
+
+#negotiation: #could be usable. #winsorized. 
+hist(PBS_demos$CTSnegot) # skews lower negotiation 
+summary(PBS_demos$CTSnegot) #average is 1.79, low 
+PBS_demos$CTSnegot_w <- Winsorize(PBS_demos$CTSnegot, na.rm = TRUE)
+hist(PBS_demos$CTSnegot_w)
+skewness(PBS_demos$CTSnegot_w)
+
+#cts psychological aggression: #unusable
+hist(PBS_demos$CTSpsychagg) #really low aggression
+summary(PBS_demos$CTSpsychagg) #.1875 median 
+
+#cts sexual coercion: #unusable
+hist(PBS_demos$CTSsexcoerc) # super low, not worth it IMO
+
+
+#cts injury: ##UNUSABLE
+hist(PBS_demos$CTSinjury) #also super low. this variabel is giving unusable. 
+
+
+#childhood trauma questionnaire: 
+
+#emotional abuse: #prob not usable. 
+
+hist(PBS_demos$CTQ_emo_abuse) #mostly low emotional abuse
+summary(PBS_demos$CTQ_emo_abuse) #mostly low 
+PBS_demos$CTQ_emo_abuse_w <- Winsorize(PBS_demos$CTQ_emo_abuse, na.rm = TRUE)
+hist(PBS_demos$CTQ_emo_abuse_w)
+PBS_demos$CTQ_emo_abuse_w_log <- log10(PBS_demos$CTQ_emo_abuse_w)
+hist(PBS_demos$CTQ_emo_abuse_w_log)
+skewness(PBS_demos$CTQ_emo_abuse_w_log) #.46 skew. It's stil not normal. Idk about this one. 
+
+#emotinal neglect ***USABLE
+hist(PBS_demos$CTQ_emo_neglect) #actually decently normal-looking
+summary(PBS_demos$CTQ_emo_neglect) #12 median
+skew(PBS_demos$CTQ_emo_neglect) #.43 skew
+
+
+#physical negelct: #not usable stilL!!!!
+hist(PBS_demos$CTQ_phys_neglect) #skewed lower 
+describe(PBS_demos$CTQ_phys_neglect) # big pos skew. 
+boxplot(PBS_demos$CTQ_phys_neglect)
+PBS_demos$CTQ_phys_neglect_w <- Winsorize(PBS_demos$CTQ_phys_neglect, na.rm = TRUE)
+describe(PBS_demos$CTQ_phys_neglect_w)
+PBS_demos$CTQ_phys_neglect_w_log <- log10(PBS_demos$CTQ_phys_neglect_w)
+hist(PBS_demos$CTQ_phys_neglect_w_log)
+
+#sexual abuse:  #NOT usable.
+hist(PBS_demos$CTQ_sex_abuse) #mostly really low 
+describe(PBS_demos$CTQ_sex_abuse)
+
+
+#hollingshead: #usable 
+#had to convert to numeric: 
+PBS_demos$hh_total_score_num <- as.numeric(PBS_demos$hh_total_score, na.RM = TRUE)
+hist(PBS_demos$hh_total_score_num) #decent variability here actually 
+summary(PBS_demos$hh_total_score_num) # mean 35.3 
+skewness(PBS_demos$hh_total_score_num)
+
+#INR: #wsqrt
+hist(PBS_demos$INRadjusted_nooutlier)
+PBS_demos$INRadjusted_nooutlier_w <- Winsorize(PBS_demos$INRadjusted_nooutlier, na.rm = TRUE)
+hist(PBS_demos$INRadjusted_nooutlier_w)
+skewness(PBS_demos$INRadjusted_nooutlier_w)
+PBS_demos$INRadjusted_nooutlier_w_sqrt <- sqrt(PBS_demos$INRadjusted_nooutlier_w)
+hist(PBS_demos$INRadjusted_nooutlier_w_sqrt)
+
+#hours in prek and school #OG VARIABLE IS GOOD. I THINK??
+
+attach(PBS_demos)
+
+hist(PBS_demos$child_total_hrs) #lol 
+boxplot(PBS_demos$child_total_hrs)
+skewness(PBS_demos$child_total_hrs)
+describe(PBS_demos$child_total_hrs)
+PBS_demos$child_total_hrs_sqrt <- sqrt(51-PBS_demos$child_total_hrs)
+hist(PBS_demos$child_total_hrs_sqrt)
+describe(PBS_demos$child_total_hrs_sqrt)
+
+PBS_demos$child_total_hrs_w <- Winsorize(PBS_demos$child_total_hrs, na.rm = TRUE)
+hist(PBS_demos$child_total_hrs_w)
+describe(PBS_demos$child_total_hrs_w)
+PBS_demos$child_total_hrs_w_sqrt <- sqrt(51-PBS_demos$child_total_hrs_w)
+hist(PBS_demos$child_total_hrs_w_sqrt)
+describe(PBS_demos$child_total_hrs_w_sqrt)
+
+
+
+###now lets look at associations: 
+
+PBS_subset_big <- PBS_demos[, c("r_COI_nat_sqrt", "ADI_Nat_Percentile_w", "FSStotal_w",
+                                "INRadjusted_nooutlier_w_sqrt", 
+                                "hh_total_score_num", "ladder_us", "ladder_local", 
+                                "BDI_total_w_sqrt", "STAI_w", "FSI_total_wsqrt",
+                                "FRS_Totals_w", "CTQ_emo_neglect", "CTSnegot_w", 
+                                "STAI_S_w", "child_total_hrs")]
+
+chart.Correlation(PBS_subset_big, histogram = TRUE, method = "pearson")
+
+
+PBS_subset_local <- PBS_demos[, c("r_COI_stt_w", "ADI_State_Decile", "ladder_local", "child_total_hrs", 
+                                  "STAI_w", "FSI_total_wsqrt", "FSStotal_w", 
+                                  "CTSnegot_w", "BDI_total_w_sqrt", "CTQ_emo_neglect", 
+                                  "INRadjusted_nooutlier_w_sqrt")]
+
+chart.Correlation(PBS_subset_local, histogram = TRUE, method = "pearson")
+
+PBS_subset_small_nat <- PBS_demos[, c("r_COI_nat_sqrt", "ADI_Nat_Percentile_w", "FSStotal_w",
+                                      "INRadjusted_nooutlier_w_sqrt", 
+                                    "ladder_us", "BDI_total_w_sqrt", "FSI_total_wsqrt",
+                                    "STAI_w", "child_total_hrs")]
+
+
+chart.Correlation(PBS_subset_small_nat, histogram = TRUE, method = "pearson")
+
+
+PBS_subset_small_local <- PBS_demos[, c("r_COI_stt_w", "ADI_State_Decile", "FSStotal_w",
+                                        "INRadjusted_nooutlier_w_sqrt", 
+                                        "ladder_local", "BDI_total_w_sqrt", "FSI_total_wsqrt",
+                                        "STAI_w", "child_total_hrs")]
+
+chart.Correlation(PBS_subset_small_local, histogram = TRUE, method = "pearson")
+
+#save
+write.csv(PBS_demos, file = "pbs_demos_clean_7.19.csv", row.names = FALSE) 
+
+
+
+
+##cleaning the STAI T scale: 
+
+#upload csv: 
+
+PBS_demos <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/pbs_demos_7.20.csv')
+
+#STAI T, more on the lower side. 
+hist(PBS_demos$STAI_T_nooutlier)
+describe(PBS_demos$STAI_T_nooutlier) #all good tbh. 
+#one outlier! removed outlier!
