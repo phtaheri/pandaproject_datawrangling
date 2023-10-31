@@ -1,0 +1,98 @@
+library(reshape2)
+library(dplyr)
+library(tidyverse)
+library(reshape2)
+library(ggplot2)
+library(psych)
+library(moments)
+library(DescTools)
+library(car)
+
+setwd("/Users/parsanajmaie/Desktop/PhD/Masters Thesis")
+
+#upload csv: 
+
+PBS_neighbor <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/pbs_COI_ADI_num_R_6.8.csv')
+
+
+#upload INR csv: 
+
+PBS_INRFSS <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/pbs_INR_FSS_num_6.8.csv')
+
+PBS_neigh_INRFSS <- full_join(PBS_neighbor, PBS_INRFSS, by = "ID", all = TRUE)
+
+#save
+
+write.csv(PBS_neigh_INRFSS, file= "PBS_neighbor_INRFSS_R_6.8.csv", row.names = FALSE)
+
+
+#now we can start looking at our variables
+
+
+########lets check FSS: 
+
+#FSS total:
+hist(PBS_neigh_INRFSS$FSStotal) #not bad #pretty positively skewed, but still not bad. looks like mostly low support. 
+summary(PBS_neigh_INRFSS$FSStotal) #mean = 34.71, low support :(
+skewness(PBS_neigh_INRFSS$FSStotal, na.rm = TRUE) #1.01412, not surprising
+
+#FSS informal support total: 
+hist(PBS_neigh_INRFSS$FSSinformalsupport) #slightly better distribution wise, but still sad lol. 
+summary(PBS_neigh_INRFSS$FSSinformalsupport) #28.2 low informal support.
+skewness(PBS_neigh_INRFSS$FSSinformalsupport) #na???
+
+#FSS formal support total:
+
+hist(PBS_neigh_INRFSS$FSSformalsupport) #also positively skewed. but only goes up to 20
+summary(PBS_neigh_INRFSS$FSSformalsupport) #6.50 mean, not suprising bc texas lol 
+skewness(PBS_neigh_INRFSS$FSSformalsupport) #NA
+
+#INR 
+
+hist(PBS_neigh_INRFSS$INRadjusted) #v poor 
+summary(PBS_neigh_INRFSS$INRadjusted) #avg 1.59
+skewness(PBS_neigh_INRFSS$INRadjusted) #NA???
+
+
+#lets see multicollinearity 
+
+#upload trimmed csv: 
+
+PBS_neigh_INRFSS_trim <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/pbs_neighbor_INRFSS_trimmed_6.8.csv')
+
+cor_prelim <- cor(PBS_neigh_INRFSS_trim[, -1], use = "pairwise.complete.obs")
+cor_prelim
+#pretty good!!!!!
+
+#lets create a dataframe with just some preliminary testing variables:
+PBS_ADI_COI_INR <- PBS_neigh_INRFSS_trim[, c ("r_COI_nat", "r_COI_stt", "ADI_Nat_Percentile", "FSStotal", "INRadjusted")]
+PBS_ADI_COI_INR
+
+#testing for multicollinearity, -1,
+
+cor_ADI_COI_INR <- cor(PBS_ADI_COI_INR[, -1], use = "pairwise.complete.obs")
+#looks like we're pretty good actuallY!!!
+
+#corplot 
+
+
+cor_mult_prelim <- PBS_ADI_COI_INR %>%
+  select("r_COI_nat", "r_COI_stt", "ADI_Nat_Percentile", "FSStotal", "INRadjusted")
+  cor_mult_prelim
+corstars <-function(x, method= "pearson", removeTriangle=c("upper", "lower"),
+                    result=c("none", "html", "latex")){
+  
+  
+  
+library(PerformanceAnalytics)
+  chart.Correlation(PBS_ADI_COI_INR, histogram = TRUE, method = "pearson")
+
+
+data <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/PBS_neighbor_INRFSS_R_6.8.csv')
+
+  
+#without the huge INR person: 
+
+data_subset <- data[, c("r_COI_nat..overall.nat.", "ADI_Nat_Percentile", "FSStotal", "INRadjusted_nooutlier")]
+chart.Correlation(PBS_ADI_COI_INR_noout, histogram = TRUE, method = "pearson")
+  
