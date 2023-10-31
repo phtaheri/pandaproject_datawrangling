@@ -1,0 +1,82 @@
+library(reshape2)
+library(dplyr)
+library(tidyverse)
+library(reshape2)
+library(ggplot2)
+library(psych)
+library(moments)
+library(DescTools)
+#library(Hmisc) for describe function. will disable summary function.
+
+setwd("/Users/parsanajmaie/Desktop/PhD/Masters Thesis")
+
+#upload csv: 
+
+PBS_COI <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/pbs_COI_num_5.24.csv')
+
+#lets check scatterplots and distributions for each variable. 
+
+####first, let's look at total COI z score: 
+
+hist(PBS_COI$z_COI_nat) #not bad
+summary(PBS_COI$z_COI_nat) 
+skewness(PBS_COI$z_COI_nat, na.rm = TRUE) #-.49, not surprising
+
+#next scatterplot: 
+plot(PBS_COI$ID, PBS_COI$z_COI_nat)
+
+
+###total COI national score: 
+
+hist(PBS_COI$r_COI_nat)
+summary(PBS_COI$r_COI_nat) 
+skewness(PBS_COI$r_COI_nat, na.rm = TRUE) #.744
+
+#scatterplot:
+plot(PBS_COI$ID, PBS_COI$r_COI_nat)
+
+###ed COI national score: 
+
+hist(PBS_COI$r_ED_nat) #wow, almost perfectly normal! 
+summary(PBS_COI$r_ED_nat)
+skewness(PBS_COI$r_ED_nat, na.rm = TRUE) #.44
+
+#scatterplot:
+plot(PBS_COI$ID, PBS_COI$r_ED_nat)
+
+###health COI national score: 
+
+hist(PBS_COI$r_HE_nat) #super skewed lol
+summary(PBS_COI$r_HE_nat)
+skewness(PBS_COI$r_HE_nat, na.rm = TRUE) #1.69, duh lol 
+
+#scatterplot: 
+plot(PBS_COI$ID, PBS_COI$r_HE_nat)
+
+####social economic national score: 
+
+hist(PBS_COI$r_SE_nat) #skewed but not bad 
+summary(PBS_COI$r_SE_nat)
+skewness(PBS_COI$r_SE_nat, na.rm = TRUE) #.651
+
+#scatterplot:
+plot(PBS_COI$ID, PBS_COI$r_SE_nat)
+
+
+####now let's check area deprivation index. 
+
+#upload csv: 
+
+PBS_ADI <- read.csv('/Users/parsanajmaie/Desktop/PhD/Masters Thesis/pbs_ADI_num_5.24.csv')
+
+##adi: 
+
+hist(PBS_ADI$ADI_Nat_Percentile) #skewed but not bad
+summary(PBS_ADI$ADI_Nat_Percentile)
+skewness(PBS_ADI$ADI_Nat_Percentile, na.rm = TRUE) #-.369
+
+#scatterplot: 
+plot(PBS_ADI$ID, PBS_ADI$ADI_Nat_Percentile)
+
+
+#I think we can use the dataset! :) 
